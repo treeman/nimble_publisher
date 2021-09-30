@@ -30,6 +30,7 @@ defmodule NimblePublisher do
     from = Keyword.fetch!(opts, :from)
     as = Keyword.fetch!(opts, :as)
     parser_module = Keyword.get(opts, :parser)
+    converter_module = Keyword.get(opts, :converter)
 
     for highlighter <- Keyword.get(opts, :highlighters, []) do
       Application.ensure_all_started(highlighter)
@@ -45,7 +46,7 @@ defmodule NimblePublisher do
           path
           |> Path.extname()
           |> String.downcase()
-          |> convert_body(body, opts)
+          |> convert_body(body, opts, converter_module)
 
         builder.build(path, attrs, body)
       end
@@ -104,13 +105,17 @@ defmodule NimblePublisher do
     end
   end
 
-  defp convert_body(extname, body, opts) when extname in [".md", ".markdown"] do
+  defp convert_body(extname, body, opts, nil) when extname in [".md", ".markdown"] do
     earmark_opts = Keyword.get(opts, :earmark_options, %Earmark.Options{})
     highlighters = Keyword.get(opts, :highlighters, [])
     body |> Earmark.as_html!(earmark_opts) |> highlight(highlighters)
   end
 
-  defp convert_body(_extname, body, _opts) do
+  defp convert_body(_extname, body, _opts, nil) do
     body
+  end
+
+  defp convert_body(extname, body, opts, converter_module) do
+    converter_module.convert(extname, body, opts)
   end
 end

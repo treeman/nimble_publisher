@@ -180,6 +180,24 @@ defmodule NimblePublisherTest do
     end
   end
 
+  test "allows for custom page converting function" do
+    defmodule Converter do
+      def convert(_extname, body, _opts) do
+        body |> String.upcase()
+      end
+    end
+
+    defmodule Example do
+      use NimblePublisher,
+        build: Builder,
+        from: "test/fixtures/custom.converter",
+        as: :custom,
+        converter: Converter
+
+      assert hd(@custom).body == "BODY\n"
+    end
+  end
+
   test "raises if missing separator" do
     assert_raise RuntimeError,
                  ~r/could not find separator --- in "test\/fixtures\/invalid.noseparator"/,

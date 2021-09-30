@@ -57,6 +57,10 @@ Each article in the articles directory must have the format:
   * `:parser` - custom module with a `parse/2` function that receives the file path
     and content as params. It must return a 2 element tuple with attributes and body.
 
+  * `:converter` - custom module with a `convert` function that receives the
+    extension, body and the options given to `NimblePublisher`. It must return the
+    converted body.
+
 ## Examples
 
 Let's see a complete example. First add `nimble_publisher` with
@@ -189,6 +193,25 @@ end
 
 The `parse/2` function from this module receives the file path and content as params.
 It must return a 2 element tuple with attributes and body.
+
+### Custom converter
+
+You may want to define a custom function to convert the body of your file, after it has been parsed.
+
+```elixir
+  use NimblePublisher,
+    ...
+    converter: Converter,
+
+defmodule Converter do
+  def convert(_extname, body, _opts) do
+    {:ok, output} = Pandex.gfm_to_html(body)
+    output
+  end
+end
+```
+
+The `convert/2` function receives the extension, body and the `NimblePublisher` options. It must return the body.
 
 ### Live reloading
 
